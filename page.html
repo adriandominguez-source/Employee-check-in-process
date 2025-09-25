@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <title>Control de acceso QR</title>
+  </head>
+  <body>
+    <div id="loader" class="spinner-grow" role="status" style="display: none">
+    </div>
+    <div id="success" class="alert alert-success" role="alert" style="display: none; font-size: 3em;">
+    </div>
+    <div id="error" class="alert alert-danger" role="alert" style="display: none; font-size: 3em;">
+    </div>
+
+    <script>
+      const STORAGE_KEY = 'userid_' + <?=data["id"]?>;
+      window.onload = function () {
+        var action = "<?=data["action"]?>";
+        var control = "<?=data["control"]?>";
+        var userid = "<?=data["userid"]?>";
+        switch(action){
+          case "register":
+            if(userid){
+              localStorage.setItem(STORAGE_KEY,userid);
+              $('#success').html(`<i class="bi bi-person-check-fill"></i> Te has registrado como <b>${userid}</b>`);
+              $('#success').show();
+            }else{
+              localStorage.removeItem(STORAGE_KEY);
+            }
+          break;
+          case "checkin":
+            var regUserid = localStorage.getItem(STORAGE_KEY);
+            if(!regUserid){
+              $('#error').html(`<i class="bi bi-exclamation-circle-fill"></i> Debes registrarte para fichar.`);
+              $('#error').show();
+            }else{
+              $('#loader').show();            
+              google.script.run
+              .withSuccessHandler(function(ret){
+                $('#success').html(`<i class="bi bi-alarm"></i> ${ret}<br/><b>${control}</b>: ${regUserid}`);
+                $('#loader').hide();            
+                $('#success').show();
+              })
+              .withFailureHandler(function(err){
+                $('#error').html(`<i class="bi bi-exclamation-circle-fill"></i> Se ha producido un error: ${err}`);
+                $('#loader').hide();            
+                $('#error').show();
+              })
+              .checkin(regUserid,control);
+            }
+          break;
+          default:
+            var regUserid = localStorage.getItem(STORAGE_KEY);
+            if(!regUserid){
+              $('#error').html(`<i class="bi bi-exclamation-circle-fill"></i> Debes registrarte para fichar.`);
+              $('#error').show();
+            }else{
+              $('#success').html(`<i class="bi bi-person-badge"></i> Estas registrad@ como <b>${regUserid}</b>`);
+              $('#success').show();
+            }
+          break;
+        }
+      }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  </body>
+</html>
